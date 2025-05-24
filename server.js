@@ -91,6 +91,6 @@
     if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
         console.log(`Servidor corriendo en puerto ${PORT}`);
-        console.log(`URL de callback OAuth: ${process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback'}`);
-    });
+        console.log(`URL de callback OAuth: ${process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback'}`); http://localhost:3001/auth/google/callback
+    }); 
     }
