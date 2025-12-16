@@ -24,7 +24,10 @@
         const clientUrl = getClientRedirectUrl();
 
         return passport.authenticate('google', { session: false }, (err, user) => {
-            if (err) return next(err);
+            if (err) {
+                const msg = encodeURIComponent(err?.message || 'google_oauth_error');
+                return res.redirect(`${clientUrl}/login?error=${msg}`);
+            }
 
             if (!user) {
                 return res.redirect(`${clientUrl}/login?error=google_oauth_failed`);
@@ -42,7 +45,8 @@
 
                 return res.redirect(`${clientUrl}/login?token=${encodeURIComponent(token)}&user=${userObj}`);
             } catch (e) {
-                return next(e);
+                const msg = encodeURIComponent(e?.message || 'google_oauth_error');
+                return res.redirect(`${clientUrl}/login?error=${msg}`);
             }
         })(req, res, next);
     });
