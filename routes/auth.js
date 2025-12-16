@@ -7,12 +7,25 @@
     const router = express.Router();
 
     const getClientRedirectUrl = () => {
-        return (
-            process.env.CLIENT_URL_PROD ||
-            process.env.CLIENT_URL_LOCAL ||
-            process.env.CLIENT_URL ||
-            'http://localhost:5173'
-        ).replace(/\/+$/, '');
+        const isProduction =
+            process.env.NODE_ENV === 'production' ||
+            process.env.VERCEL_ENV === 'production' ||
+            process.env.VERCEL_ENV === 'preview';
+
+        const localDefault = 'http://localhost:5173';
+        const prod = process.env.CLIENT_URL_PROD || process.env.CLIENT_URL;
+        const local = process.env.CLIENT_URL_LOCAL || process.env.CLIENT_URL;
+
+        const selected = (isProduction ? prod : local) || localDefault;
+        const normalized = String(selected).replace(/\/+$/, '');
+
+        if (isProduction && normalized.includes('localhost')) {
+            console.warn(
+                'CLIENT_URL_PROD no está configurada (o apunta a localhost). Configura CLIENT_URL_PROD con tu URL real del frontend.'
+            );
+        }
+
+        return normalized;
     };
 
     // Google OAuth routes
