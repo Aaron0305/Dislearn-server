@@ -7,6 +7,34 @@
 
     dotenv.config();
 
+    const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'preview';
+
+    const getGoogleCallbackUrl = () => {
+    const localDefault = 'http://localhost:3001/auth/google/callback';
+
+    const prod = process.env.GOOGLE_CALLBACK_URL_PROD;
+    const local = process.env.GOOGLE_CALLBACK_URL;
+
+    const selected = isProduction ? (prod || local) : (local || localDefault);
+
+    if (isProduction && !prod) {
+        console.warn(
+        'GOOGLE_CALLBACK_URL_PROD no está configurada; usando GOOGLE_CALLBACK_URL como fallback.'
+        );
+    }
+
+    if (isProduction && selected && String(selected).includes('localhost')) {
+        console.warn(
+        'El callback de Google en producción apunta a localhost. Configura GOOGLE_CALLBACK_URL_PROD con tu dominio real.'
+        );
+    }
+
+    return selected;
+    };
+
     // Estrategia Local
     passport.use(new LocalStrategy(
     { usernameField: 'email' },
@@ -40,7 +68,7 @@
         {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback',
+        callbackURL: getGoogleCallbackUrl(),
         scope: ['profile', 'email']
         },
         async (accessToken, refreshToken, profile, done) => {
