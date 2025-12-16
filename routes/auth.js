@@ -20,23 +20,32 @@
     scope: ['profile', 'email'] 
     }));
 
-    router.get('/google/callback', 
-    passport.authenticate('google', { 
-        failureRedirect: '/login',
-        session: true
-    }),
-    (req, res) => {
-        const token = req.user.generateAuthToken ? req.user.generateAuthToken() : '';
-        const userObj = JSON.stringify({
-        id: req.user._id,
-        email: req.user.email,
-        nombre: req.user.nombre
-        });
+    router.get('/google/callback', (req, res, next) => {
+        const clientUrl = getClientRedirectUrl();
 
-                const clientUrl = getClientRedirectUrl();
-                res.redirect(`${clientUrl}/login?token=${token}&user=${encodeURIComponent(userObj)}`);
-    }
-    );
+        return passport.authenticate('google', { session: false }, (err, user) => {
+            if (err) return next(err);
+
+            if (!user) {
+                return res.redirect(`${clientUrl}/login?error=google_oauth_failed`);
+            }
+
+            try {
+                const token = typeof user.generateAuthToken === 'function' ? user.generateAuthToken() : '';
+                const userObj = encodeURIComponent(
+                    JSON.stringify({
+                        id: user._id,
+                        email: user.email,
+                        nombre: user.nombre,
+                    })
+                );
+
+                return res.redirect(`${clientUrl}/login?token=${encodeURIComponent(token)}&user=${userObj}`);
+            } catch (e) {
+                return next(e);
+            }
+        })(req, res, next);
+    });
 
         // Verificar sesión actual
         router.get('/me', (req, res) => {
